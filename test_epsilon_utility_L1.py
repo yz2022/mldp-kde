@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from draw_plot import draw_epsilon_MSE_l1
+from plotting_tools import draw_epsilon_MSE_l1
 from PM import piecewise_l1_l2_kernel_kde
 from RACE import count_race_l1
 from DM import duchi_l1_l2_kernel_kde

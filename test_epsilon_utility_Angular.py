@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from FKM_LL_RACE import fkm_ll_race
 from FKM_LR_RACE import fkm_lr_race_kde
-from draw_plot import draw_epsilon_MSE_ang
+from plotting_tools import draw_epsilon_MSE_ang
 from PM import piecewise_ang_kernel_kde
 from GI import gi_angkernel_kde
 from RACE import count_race_ang

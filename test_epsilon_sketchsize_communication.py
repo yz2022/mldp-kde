@@ -1,4 +1,4 @@
-from draw_plot import draw_epsilon_sketch_communication_twins
+from plotting_tools import draw_epsilon_sketch_communication_twins
 import numpy as np
 from parameters import dataset_parameters
 

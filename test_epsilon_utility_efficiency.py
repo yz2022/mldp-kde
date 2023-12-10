@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from draw_plot import draw_epsilon_MSE, draw_epsilon_construction_time, draw_epsilon_query_time
+from plotting_tools import draw_epsilon_MSE, draw_epsilon_construction_time, draw_epsilon_query_time
 from PM import piecewise_l1_l2_kernel_kde
 from GI import gi_l2kernel_kde
 from RACE import count_race_l2

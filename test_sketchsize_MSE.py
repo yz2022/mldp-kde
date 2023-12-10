@@ -1,5 +1,5 @@
 import pandas as pd
-from draw_plot import draw_sketchsize_MSE
+from plotting_tools import draw_sketchsize_MSE
 from RACE import count_race_l2
 from mLDP_KDE import mldp_kde_l2kernel_kde
 from evaluation import MSE

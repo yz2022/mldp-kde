@@ -4,7 +4,7 @@ from GI import gi_l2kernel_kde
 from evaluation import MSE
 from RACE import count_race_l2
 from mLDP_KDE import mldp_kde_l2kernel_kde
-from draw_plot import draw_n_MSE, draw_n_construction_time, draw_n_query_time
+from plotting_tools import draw_n_MSE, draw_n_construction_time, draw_n_query_time
 from PM import piecewise_l1_l2_kernel_kde
 from DM import duchi_l1_l2_kernel_kde
 from SW import square_wave_l1_l2_kernel_kde

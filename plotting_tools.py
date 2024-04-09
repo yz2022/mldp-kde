@@ -633,12 +633,12 @@ def draw_heatmap(query_data_embedded, acc_kde_vals, plot_value, datasets, select
         plt.title(f'{datasets[selected_flag]}')
         plt.suptitle('Exact', y=-0.1, x=0.46)
     elif method_flag == 'mldp-kde':
-        plt.title(f'{datasets[selected_flag]}($\\varepsilon$ = {e}, $r = {r}$)')
+        plt.title(f'{datasets[selected_flag]}($\\varepsilon$ = {e}')
         plt.suptitle('mLDP-KDE', y=-0.1, x=0.46)
     elif method_flag == 'race':
         plt.title(f'{datasets[selected_flag]}')
         plt.suptitle('RACE', y=-0.1, x=0.46)
     elif method_flag == 'gi':
         plt.title(f'{datasets[selected_flag]}($\\varepsilon$ = {e})')
-        plt.suptitle('GI', y=-0.1, x=0.46)
+        plt.suptitle('GI-KDE', y=-0.1, x=0.46)
     plt.show()

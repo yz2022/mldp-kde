@@ -5,6 +5,160 @@ from RACE import RACE
 import time
 
 
+''' Function for mLDP-KDE (L2 kernel)'''
+def mldp_kde_l2kernel_kde(query, epsilon, data, reps, hash_range, dim, bandwidth, n, d, seed_l2lsh, seed_grr_rehash, flag=1):
+    start_time = time.perf_counter()
+    # Generate a series of L2-LSH parameters
+    W, b = l2_lsh(reps, dim, bandwidth, seed_l2lsh, flag)
+    # 1 − k(x, x′)
+    one_kernel = 1 - main_l2kernel_kde(d, bandwidth)
+    # As the monotonic property of KL divergence, approximate an extreme value using binary search
+    s = binary_search_l1_l2(one_kernel, reps, hash_range)
+    temp = 0.8 * d / bandwidth  # coefficient 0.8 r / ω
+    # Set gamma by 'Corollary 1'
+    gamma = epsilon / (reps * (((hash_range - 1) / hash_range) * temp + s))
+    hash_values = []  # hash values of all data
+    noisy_data = []  # noisy hash values of all data
+    # Calculate the probability of GRR
+    p_self = np.exp(gamma) / (np.exp(gamma) + reps - 1)
+    # Generate a hash matrix where the 'i-th' row represents 'reps' hash values for the 'i-th' user.
+    for index, d in enumerate(data):
+        hash_values_int = np.array(hash_l2_lsh(W, b, bandwidth, x=d)).astype(int)
+        hash_values.append(hash_values_int)
+    end_time = time.perf_counter()
+    const_time_1 = end_time - start_time
+
+    move_list = []  # offset for each column
+    np.random.seed(seed_grr_rehash)
+    start_time = time.perf_counter()
+    for hash_values_int in zip(*hash_values):
+        # For each column in the hash matrix, use offsets to find the interval [left, right] with the highest density of hash values.
+        left, right = find_max_subarray(hash_values_int, hash_range)
+        move_list.append(left)
+        # Offset operation
+        rehash_x = map_to_range(hash_values_int, left, hash_range)
+        noisy_d = []  # results of adding noise to a single column in the hash matrix
+        for hash_value in rehash_x:
+            P = np.random.uniform(0, 1)
+            if P < p_self:
+                # i = v case in Equation 2.
+                noisy_d.append(hash_value)
+            else:
+                # otherwise case in Equation 2.
+                while True:
+                    random_num = np.random.randint(0, hash_range)
+                    if random_num != hash_value:
+                        break
+                noisy_d.append(random_num)
+        noisy_data.append(noisy_d)
+    end_time = time.perf_counter()
+    construct_time_2 = end_time - start_time
+
+    start_time = time.perf_counter()
+    hash_query = []
+    # Obtain hash values for query data
+    for index, q in enumerate(query):
+        query_hash_value = hash_l2_lsh(W, b, bandwidth, x=q)
+        hash_values_int = np.array(query_hash_value).astype(int)
+        hash_query.append(hash_values_int)
+    end_time = time.perf_counter()
+    query_time = (end_time - start_time) / (len(query))
+
+    # Sketch construction and query process in server side
+    l2lsh_race_kde, sub_const_time, sub_query_time, counts = mldp_kde_count_race_l1_l2(hash_query, noisy_data, reps, hash_range, gamma, n, move_list)
+    return l2lsh_race_kde, const_time_1 + construct_time_2 + sub_const_time, query_time + sub_query_time, counts
+
+
+''' Function for mLDP-KDE (L1 kernel)'''
+def mldp_kde_l1kernel_kde(query, epsilon, data, reps, hash_range, dim, bandwidth, n, seed_l1lsh, seed_grr_rehash):
+    # Generate a series of L1-LSH parameters
+    W, b = l1_lsh(reps, dim, bandwidth, seed_l1lsh)
+
+    one_kernel = 1 - main_l1kernel_kde(0.05, bandwidth)
+    s = binary_search_l1_l2(one_kernel, reps, hash_range)
+    c1 = 1.2
+    c2 = 0.1
+    temp1 = (c1 * (hash_range - 1) * 0.05) / (bandwidth * hash_range)
+    temp2 = (c2 * (hash_range - 1)) / hash_range
+    # Calculate gamma for L1
+    gamma = epsilon / (reps * (temp1 + temp2 + s))
+
+    hash_values = []
+    noisy_data = []
+    p_self = np.exp(gamma) / (np.exp(gamma) + reps - 1)
+    for index, d in enumerate(data):
+        hash_values_int = np.array(hash_l1_lsh(W, b, bandwidth, x=d)).astype(int)
+        hash_values.append(hash_values_int)
+    move_list = []
+    np.random.seed(seed_grr_rehash)
+    for hash_values_int in zip(*hash_values):
+        left, right = find_max_subarray(hash_values_int, hash_range)
+        move_list.append(left)
+        rehash_x = map_to_range(hash_values_int, left, hash_range)
+        noisy_d = []
+        for hash_value in rehash_x:
+            P = np.random.uniform(0, 1)
+            if P < p_self:
+                noisy_d.append(hash_value)
+            else:
+                while True:
+                    random_num = np.random.randint(0, hash_range)
+                    if random_num != hash_value:
+                        break
+                noisy_d.append(random_num)
+        noisy_data.append(noisy_d)
+
+    hash_query = []
+    for index, q in enumerate(query):
+        query_hash_value = hash_l1_lsh(W, b, bandwidth, x=q)
+        hash_values_int = np.array(query_hash_value).astype(int)
+        hash_query.append(hash_values_int)
+    l1lsh_race_kde, _, _, _ = mldp_kde_count_race_l1_l2(hash_query, noisy_data, reps, hash_range, gamma, n, move_list)
+    return l1lsh_race_kde
+
+
+''' Function for mLDP-KDE (Angular kernel)'''
+def mldp_kde_angkernel_kde(query, epsilon, data, reps, hash_range, dim, n, seed_anglsh, seed_grr_rehash):
+    # Generate parameter a for Angular-LSH
+    a = ang_lsh(reps, dim, seed_anglsh)
+
+    s = binary_search_ang(reps)
+    # Calculate gamma for Angular kernel
+    gamma = epsilon / (reps * ((0.001 / np.pi) + s))
+
+    hash_values = []
+    p_self = np.exp(gamma) / (np.exp(gamma) + reps - 1)
+    noisy_data = []
+
+    for index, d in enumerate(data):
+        hash_values_int = np.array(hash_ang_lsh(a, x=d)).astype(int)
+        hash_values.append(hash_values_int)
+    np.random.seed(seed_grr_rehash)
+
+    for hash_values_int in zip(*hash_values):
+        noisy_d = []
+        for hash_value in hash_values_int:
+            P = np.random.uniform(0, 1)
+            if P < p_self:
+                noisy_d.append(hash_value)
+            else:
+                while True:
+                    random_num = np.random.randint(0, hash_range)
+                    if random_num != hash_value:
+                        break
+                noisy_d.append(random_num)
+        noisy_data.append(noisy_d)
+
+    hash_query = []
+    for index, q in enumerate(query):
+        query_hash_value = hash_ang_lsh(a, x=q)
+        hash_values_int = np.array(query_hash_value).astype(int)
+        hash_query.append(hash_values_int)
+
+    anglsh_race_kde = mldp_kde_count_race_ang(hash_query, noisy_data, reps, hash_range, gamma, n)
+    return anglsh_race_kde
+
+
 def map_to_range(num, start, reps):
     mapped_data = []
     for d in num:
@@ -26,7 +180,6 @@ def find_max_subarray(nums, reps):
             Max = i
         if i < Min:
             Min = i
-
     subarray_sum = 0
     max_sum = -99999999
     left = 0
@@ -41,7 +194,6 @@ def find_max_subarray(nums, reps):
                 max_sum = subarray_sum
                 left = Min
                 right = i
-
         else:
             if i in cnt:
                 subarray_sum = subarray_sum + cnt[i]
@@ -88,7 +240,6 @@ def binary_search_l1_l2(one_kernel, reps, hash_range):
 
     return guess
 
-
 def binary_search_ang(reps):
     lower_bound = 0.00001
     p = 0.001 / np.pi
@@ -111,14 +262,14 @@ def binary_search_ang(reps):
     return guess
 
 
-def inequality_function_l1_l2(one_kernel, alpha, reps, hash_range):
-    a = ((hash_range - 1) / hash_range) * one_kernel + alpha
+def inequality_function_l1_l2(one_kernel, s, reps, hash_range):
+    a = ((hash_range - 1) / hash_range) * one_kernel + s
     b = ((hash_range - 1) / hash_range) * one_kernel
     return (a * np.log((a / b)) + (1 - a) * np.log((1 - a) / (1 - b))) - (np.log(10) / reps)
 
 
-def inequality_function_ang(p, alpha, reps):
-    a = p + alpha
+def inequality_function_ang(p, s, reps):
+    a = p + s
     b = p
     return (a * np.log((a / b)) + (1 - a) * np.log((1 - a) / (1 - b))) - (np.log(10) / reps)
 
@@ -130,19 +281,21 @@ def subtract_lists(list1, list2):
 
 def mldp_kde_count_race_l1_l2(l2lsh_query, hash_codes, reps, hash_range, gamma, n, move_list):
     start_time = time.perf_counter()
-    mldp_kde_result = []
+    mldp_kde_result = []    # kde results for query points
+    # Sketch construction
     S = RACE(n, repetitions=reps, hash_range=hash_range)
     ind = 0
     for d in hash_codes:
         S.main_add(d, ind)
         ind = ind + 1
-    # S.print()
+    # S.print()     # sketch visualization
     counts = S.counts()
     end_time = time.perf_counter()
     sub_construct_time = end_time - start_time
 
     start_time = time.perf_counter()
     for hash_q in l2lsh_query:
+        # Offset query points to target hash range based on previously calculated offsets
         rehash_q = subtract_lists(hash_q, move_list)
         mldp_kde_result.append(S.main_query_l1_l2(rehash_q, gamma))
     mldp_kde_result = np.array(mldp_kde_result)
@@ -167,131 +320,3 @@ def mldp_kde_count_race_ang(l2lsh_query, hash_codes, reps, hash_range, gamma, n)
     return mldp_kde_result
 
 
-def mldp_kde_l2kernel_kde(query, epsilon, data, reps, hash_range, dim, bandwidth, n, d, seed_l2lsh, seed_grr_rehash, flag=1):
-    start_time = time.perf_counter()
-    one_kernel = 1 - main_l2kernel_kde(d, bandwidth)
-    alpha = binary_search_l1_l2(one_kernel, reps, hash_range)
-    temp = 0.8 * d / bandwidth
-    gamma = epsilon / (reps * (((hash_range - 1) / hash_range) * temp + alpha))
-    W, b = l2_lsh(reps, dim, bandwidth, seed_l2lsh, flag)
-    hash_values = []
-    p_self = np.exp(gamma) / (np.exp(gamma) + reps - 1)
-    noisy_data = []
-    for index, d in enumerate(data):
-        hash_values_int = np.array(hash_l2_lsh(W, b, bandwidth, x=d)).astype(int)
-        hash_values.append(hash_values_int)
-    end_time = time.perf_counter()
-    const_time_1 = end_time - start_time
-
-    move_list = []
-    np.random.seed(seed_grr_rehash)
-    start_time = time.perf_counter()
-    for hash_values_int in zip(*hash_values):
-        left, right = find_max_subarray(hash_values_int, hash_range)
-        move_list.append(left)
-        rehash_x = map_to_range(hash_values_int, left, hash_range)
-        noisy_d = []
-        for hash_value in rehash_x:
-            P = np.random.uniform(0, 1)
-            if P < p_self:
-                noisy_d.append(hash_value)
-            else:
-                while True:
-                    random_num = np.random.randint(0, hash_range)
-                    if random_num != hash_value:
-                        break
-                noisy_d.append(random_num)
-        noisy_data.append(noisy_d)
-    end_time = time.perf_counter()
-    construct_time_2 = end_time - start_time
-
-    start_time = time.perf_counter()
-    hash_query = []
-    for index, q in enumerate(query):
-        query_hash_value = hash_l2_lsh(W, b, bandwidth, x=q)
-        hash_values_int = np.array(query_hash_value).astype(int)
-        hash_query.append(hash_values_int)
-    end_time = time.perf_counter()
-    query_time = (end_time - start_time) / (len(query))
-
-    l2lsh_race_kde, sub_const_time, sub_query_time, counts = mldp_kde_count_race_l1_l2(hash_query, noisy_data, reps, hash_range, gamma, n, move_list)
-    return l2lsh_race_kde, const_time_1 + construct_time_2 + sub_const_time, query_time + sub_query_time, counts
-
-
-def mldp_kde_l1kernel_kde(query, epsilon, data, reps, hash_range, dim, bandwidth, n, seed_l1lsh, seed_grr_rehash):
-    one_kernel = 1 - main_l1kernel_kde(0.05, bandwidth)
-    alpha = binary_search_l1_l2(one_kernel, reps, hash_range)
-    c1 = 1.2
-    c2 = 0.1
-    temp1 = (c1 * (hash_range - 1) * 0.05) / (bandwidth * hash_range)
-    temp2 = (c2 * (hash_range - 1)) / hash_range
-    gamma = epsilon / (reps * (temp1 + temp2 + alpha))
-    W, b = l1_lsh(reps, dim, bandwidth, seed_l1lsh)
-    hash_values = []
-    p_self = np.exp(gamma) / (np.exp(gamma) + reps - 1)
-    noisy_data = []
-    for index, d in enumerate(data):
-        hash_values_int = np.array(hash_l1_lsh(W, b, bandwidth, x=d)).astype(int)
-        hash_values.append(hash_values_int)
-    move_list = []
-    np.random.seed(seed_grr_rehash)
-    for hash_values_int in zip(*hash_values):
-        left, right = find_max_subarray(hash_values_int, hash_range)
-        move_list.append(left)
-        rehash_x = map_to_range(hash_values_int, left, hash_range)
-        noisy_d = []
-        for hash_value in rehash_x:
-            P = np.random.uniform(0, 1)
-            if P < p_self:
-                noisy_d.append(hash_value)
-            else:
-                while True:
-                    random_num = np.random.randint(0, hash_range)
-                    if random_num != hash_value:
-                        break
-                noisy_d.append(random_num)
-        noisy_data.append(noisy_d)
-
-    hash_query = []
-    for index, q in enumerate(query):
-        query_hash_value = hash_l1_lsh(W, b, bandwidth, x=q)
-        hash_values_int = np.array(query_hash_value).astype(int)
-        hash_query.append(hash_values_int)
-
-    l1lsh_race_kde, _, _, _ = mldp_kde_count_race_l1_l2(hash_query, noisy_data, reps, hash_range, gamma, n, move_list)
-    return l1lsh_race_kde
-
-
-def mldp_kde_angkernel_kde(query, epsilon, data, reps, hash_range, dim, n, seed_anglsh, seed_grr_rehash):
-    alpha = binary_search_ang(reps)
-    gamma = epsilon / (reps * ((0.001 / np.pi) + alpha))
-    a = ang_lsh(reps, dim, seed_anglsh)
-    hash_values = []
-    p_self = np.exp(gamma) / (np.exp(gamma) + reps - 1)
-    noisy_data = []
-    for index, d in enumerate(data):
-        hash_values_int = np.array(hash_ang_lsh(a, x=d)).astype(int)
-        hash_values.append(hash_values_int)
-    np.random.seed(seed_grr_rehash)
-    for hash_values_int in zip(*hash_values):
-        noisy_d = []
-        for hash_value in hash_values_int:
-            P = np.random.uniform(0, 1)
-            if P < p_self:
-                noisy_d.append(hash_value)
-            else:
-                while True:
-                    random_num = np.random.randint(0, hash_range)
-                    if random_num != hash_value:
-                        break
-                noisy_d.append(random_num)
-        noisy_data.append(noisy_d)
-
-    hash_query = []
-    for index, q in enumerate(query):
-        query_hash_value = hash_ang_lsh(a, x=q)
-        hash_values_int = np.array(query_hash_value).astype(int)
-        hash_query.append(hash_values_int)
-
-    anglsh_race_kde = mldp_kde_count_race_ang(hash_query, noisy_data, reps, hash_range, gamma, n)
-    return anglsh_race_kde

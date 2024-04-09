@@ -1,5 +1,8 @@
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
+import numpy as np
+from scipy.interpolate import griddata
+from scipy.ndimage import median_filter
 
 
 def draw_epsilon_MSE(epsilon, race_mse, pm_mse, dm_mse, sw_mse, gi_mse, mldp_kde_mse, title):
@@ -42,6 +45,46 @@ def draw_epsilon_MSE(epsilon, race_mse, pm_mse, dm_mse, sw_mse, gi_mse, mldp_kde
     plt.plot(epsilon, mldp_kde_mse, linestyle='-', marker='o', linewidth=1, markersize=15, markerfacecolor='none',
              markeredgewidth=3, clip_on=False, color='red', label="mLDP-KDE")
 
+    plt.tick_params(axis='x', labelsize=25)
+    plt.tick_params(axis='y', labelsize=25)
+    plt.xlabel(r'$\varepsilon$', fontname='Times New Roman', fontsize=35)
+    plt.ylabel('MSE')
+    plt.grid(True, linestyle='-', alpha=0.5, color='lightgray')
+    plt.title(title, fontsize=30)
+    plt.show()
+
+
+def draw_small_range_epsilon_MSE(epsilon, race_mse, gi_mse, mldp_kde_mse, title):
+    plt.rcParams.update({
+        'text.usetex': True,
+        'font.family': 'serif',
+        'font.serif': 'Times New Roman',
+        'font.size': 30,
+        'text.latex.preamble': r'\usepackage{txfonts}',
+        'pgf.rcfonts': False
+    })
+    fig, ax = plt.subplots()
+    ax.xaxis.set_major_locator(plt.FixedLocator([1, 2.5, 5, 7.5, 10, 12.5, 15, 17.5, 20]))
+    ax.set_yscale('log')
+    ax.set_xlim(0, 21)
+    ax.set_xticklabels(['1', '', '5', '', '10', '', '15', '', '20'])
+    ylim_dict = {
+        "CodRNA": (0.000005, 0.1),
+        "CovType": (0.000001, 0.05),
+        "RCV1": (0.000001, 0.1),
+        "Yelp": (0.000005, 5),
+        "SYN": (0.00001, 1)
+    }
+    if title in ylim_dict:
+        ax.set_ylim(*ylim_dict[title])
+        ax.yaxis.set_major_locator(plt.FixedLocator([10 ** i for i in range(-6, 2)]))
+    ax.yaxis.set_minor_locator(plt.FixedLocator([10 ** i * j for i in range(-6, 2) for j in range(2, 10)]))
+    plt.plot(epsilon, [race_mse] * len(epsilon), linestyle='-', linewidth=2, markerfacecolor='none', clip_on=False,
+             color='black', label="RACE")
+    plt.plot(epsilon, gi_mse, linestyle='-', marker='x', linewidth=1, markersize=15,
+             markerfacecolor='none', markeredgewidth=3, clip_on=False, color='blue', label="GI-KDE")
+    plt.plot(epsilon, mldp_kde_mse, linestyle='-', marker='o', linewidth=1, markersize=15, markerfacecolor='none',
+             markeredgewidth=3, clip_on=False, color='red', label="mLDP-KDE")
     plt.tick_params(axis='x', labelsize=25)
     plt.tick_params(axis='y', labelsize=25)
     plt.xlabel(r'$\varepsilon$', fontname='Times New Roman', fontsize=35)
@@ -559,4 +602,43 @@ def draw_m_query_time(test_m, race_qtime, gi_qtime, pm_qtime, dm_qtime, sw_qtime
     plt.ylabel('Query Time (s)')
     plt.grid(True, linestyle='-', alpha=0.5, color='lightgray')
     plt.title(r'SYN', fontsize=30)
+    plt.show()
+
+
+def draw_heatmap(query_data_embedded, acc_kde_vals, plot_value, datasets, selected_flag, e, r, method_flag):
+    plt.rcParams.update({
+        'text.usetex': True,
+        'font.family': 'serif',
+        'font.serif': 'Times New Roman',
+        'font.size': 30,
+        'text.latex.preamble': r'\usepackage{txfonts}',
+        'pgf.rcfonts': False
+    })
+    x_min = -70
+    x_max = 70
+    y_min = -70
+    y_max = 70
+    x, y = np.meshgrid(np.linspace(x_min, x_max, 100), np.linspace(y_min, y_max, 100))
+    kde_values = griddata((query_data_embedded[:, 0], query_data_embedded[:, 1]), plot_value, (x, y), method='nearest')
+    kde_values_smooth = median_filter(kde_values, size=15)
+    fig, ax = plt.subplots()
+    ax.xaxis.set_major_locator(plt.FixedLocator([-50, 0, 50]))
+    ax.yaxis.set_major_locator(plt.FixedLocator([-50, 0, 50]))
+    plt.imshow(kde_values_smooth, extent=(x_min, x_max, y_min, y_max), origin='lower', cmap='coolwarm', alpha=1, vmin=np.min(acc_kde_vals),
+               vmax=np.max(acc_kde_vals))
+    plt.colorbar(label='KDE Value')
+    plt.xlabel('X')
+    plt.ylabel('Y')
+    if (plot_value == acc_kde_vals).all():
+        plt.title(f'{datasets[selected_flag]}')
+        plt.suptitle('Exact', y=-0.1, x=0.46)
+    elif method_flag == 'mldp-kde':
+        plt.title(f'{datasets[selected_flag]}($\\varepsilon$ = {e}, $r = {r}$)')
+        plt.suptitle('mLDP-KDE', y=-0.1, x=0.46)
+    elif method_flag == 'race':
+        plt.title(f'{datasets[selected_flag]}')
+        plt.suptitle('RACE', y=-0.1, x=0.46)
+    elif method_flag == 'gi':
+        plt.title(f'{datasets[selected_flag]}($\\varepsilon$ = {e})')
+        plt.suptitle('GI', y=-0.1, x=0.46)
     plt.show()

@@ -39,7 +39,7 @@ Python scripts are provided to run all experiments.
 ### [Apr 2024]
 
 - **Additional Experiments**: 
-  - `test_small_range_epsilon_utility.py`: Contains code to test the utility of the RACE, GI and mLDP-KDE algorithms using a smaller epsilon range: [1, 2.5, 5, 7.5, 10, 12.5, 15, 17.5, 20].
+  - `test_small_range_epsilon_utility.py`: Contains code to test the utility of the RACE, GI and mLDP-KDE algorithms using a smaller $\varepsilon$ range: [1, 2.5, 5, 7.5, 10, 12.5, 15, 17.5, 20].
   - `test_r_effect.py`: Contains code to evaluate the impact of a range of privacy radius $r$ on the mLDP-KDE algorithm. We tested two classes of $r$:
     - average distance from a point to its t-nearest neighbors for t ∈ {1, 10, 100, 1000, 10000};
     - maximum distance from a point to its t-nearest neighbors for t ∈ {1, 10, 100, 1000, 10000};

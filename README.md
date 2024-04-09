@@ -44,7 +44,6 @@ Python scripts are provided to run all experiments.
     - average distance from a point to its t-nearest neighbors for t ∈ {1, 10, 100, 1000, 10000};
     - maximum distance from a point to its t-nearest neighbors for t ∈ {1, 10, 100, 1000, 10000};
   - `heatmap_visualization.py`: Contains code to visualizing 2D Heatmaps for KDE on each dataset.
-- **Result Presentation**: The results of additional experiments are presented in `exp-rebuttal.pdf`.
 - Update `mLDP_KDE.py`: Added comments to enhance code clarity.
 - Update `parameters.py`: Added a set of parameters for new experiments.
 - Update `plotting_tools.py`: Added functions `draw_heatmap` and  `draw_small_range_epsilon_MSE`  for new experiments.

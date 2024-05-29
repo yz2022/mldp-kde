@@ -1,14 +1,11 @@
 import numpy as np
 
 
-def l2_lsh(reps, m, omega, seed_l2lsh, flag=1):
+def l2_lsh(reps, m, omega, seed_l2lsh):
     np.random.seed(seed_l2lsh)
     W = np.random.normal(size=(reps, m))
-    if flag == 1:
-        np.random.seed(seed_l2lsh)
-        b = np.random.uniform(low=0, high=omega, size=reps)
-    else:
-        b = np.random.uniform(low=0, high=omega, size=reps)
+    np.random.seed(seed_l2lsh)
+    b = np.random.uniform(low=0, high=omega, size=reps)
     return W, b
 
 

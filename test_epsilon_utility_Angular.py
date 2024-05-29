@@ -20,6 +20,8 @@ m = params['m']
 seed_anglsh = params['seed_l2lsh']
 seed_grr_rehash = params['seed_grr_rehash']
 L_R_set = params['L_R_set_for_ang']
+L_R_set_fkmll = params['L_R_set_FKMLL_for_ang']
+L_R_set_fkmlr = params['L_R_set_FKMLR_for_ang']
 const_file = "small_datasets/Yelp_const.csv"
 query_file = "small_datasets/Yelp_query.csv"
 const_data = pd.read_csv(const_file, sep=',', lineterminator='\n', header=None)
@@ -27,8 +29,7 @@ const_data = const_data.values
 query_data = pd.read_csv(query_file, sep=',', lineterminator='\n', header=None)
 query_data = query_data.values
 N = const_data.shape[0]
-epsilon = np.arange(0, 51, 5)
-epsilon[0] = 1
+epsilon = [1, 2.5, 5, 7.5, 10, 12.5, 15, 17.5, 20]
 
 ''' Get normalized data '''
 l2_norms_const = np.linalg.norm(const_data, axis=1, keepdims=True)
@@ -50,8 +51,8 @@ race_mse.append(race_mse_sum / len(seed_anglsh))
 ''' FKM-LL-RACE '''
 fkm_ll_race_mse = []
 for index, e in enumerate(epsilon):
-    L = L_R_set[index][0]
-    R = L_R_set[index][1]
+    L = L_R_set_fkmll[index][0]
+    R = L_R_set_fkmll[index][1]
     fkm_ll_race_mse_sum = 0
     for temp_seed_l2lsh in seed_anglsh:
         l2lsh_race_kde = fkm_ll_race(unit_query_data, e, unit_const_data, L, R, m, N, temp_seed_l2lsh)
@@ -61,9 +62,8 @@ for index, e in enumerate(epsilon):
 ''' FKM-LR-RACE '''
 fkm_lr_race_mse = []
 for index, e in enumerate(epsilon):
-    L_R_set = [[3, 2], [14, 2], [32, 2], [52, 2], [74, 2], [104, 2], [130, 2], [142, 2], [158, 2], [204, 2], [224, 2]]
-    L = L_R_set[index][0]
-    R = L_R_set[index][1]
+    L = L_R_set_fkmlr[index][0]
+    R = L_R_set_fkmlr[index][1]
     fkm_lr_race_mse_sum = 0
     for temp_seed_l2lsh, temp_seed_grr_rehash in zip(seed_anglsh, seed_grr_rehash):
         l2lsh_race_kde = fkm_lr_race_kde(unit_query_data, e, unit_const_data, L, R, m, N, temp_seed_l2lsh, temp_seed_grr_rehash)
@@ -85,7 +85,7 @@ pm_mse = calc_kde_values(epsilon, piecewise_ang_kernel_kde, unit_query_data, con
 # SW-KDE
 sw_mse = calc_kde_values(epsilon, square_wave_ang_kernel_kde, unit_query_data, const_data, m, N)
 # GI-KDE
-gi_mse = calc_kde_values(epsilon, gi_angkernel_kde, unit_query_data, const_data, N)
+gi_mse = calc_kde_values(epsilon, gi_angkernel_kde, unit_query_data, const_data, m, N)
 
 ''' mLDP-KDE '''
 mldp_kde_mse = []

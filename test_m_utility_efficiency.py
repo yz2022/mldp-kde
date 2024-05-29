@@ -1,3 +1,5 @@
+import math
+
 import pandas as pd
 from kde_tools import l2kernel_kde
 import numpy as np
@@ -23,28 +25,29 @@ def calc_r_omega():
     omega = []
     for dim in test_m:
         dim = int(dim)
-        r.append(0.01 * np.sqrt(dim))
+        r.append((r_set[int(math.log10(nearest_flag))] / np.sqrt(50)) * np.sqrt(dim))
         omega.append(np.sqrt(dim))
     return r, omega
 
 
+nearest_flag = 100
 test_m = np.arange(5, 51, 5)
-test_epsilon = [1, 20, 50]
-# const_file = "data/big/SYN_100000_50_const.csv"
-# query_file = "data/big/SYN_100000_50_query.csv"
+test_epsilon = [1, 5, 20]
+
 const_file = "small_datasets/SYN_const.csv"
 query_file = "small_datasets/SYN_query.csv"
 const_data = read_file(const_file)
 query_data = read_file(query_file)
 N = const_data.shape[0]
-r, omega = calc_r_omega()
 params = dataset_parameters['SYN']
+r_set = params['r_set']
+r, omega = calc_r_omega()
 seed_l2lsh = params['seed_l2lsh']
 seed_grr_rehash = params['seed_grr_rehash']
 L_R_set_e_1 = params['L_R_set_for_testm_e_1']
+L_R_set_e_5 = params['L_R_set_for_testm_e_5']
 L_R_set_e_20 = params['L_R_set_for_testm_e_20']
-L_R_set_e_50 = params['L_R_set_for_testm_e_50']
-L_R_set = [L_R_set_e_1, L_R_set_e_20, L_R_set_e_50]
+L_R_set = [L_R_set_e_1, L_R_set_e_5, L_R_set_e_20]
 
 ''' accurate kde values '''
 acc_kde_vals = []
@@ -91,31 +94,32 @@ def calc_kde_values(kde_function, epsilon, N, test_m, omega):
 
 # DM-KDE
 dm_mse_e_1, _, _ = calc_kde_values(duchi_l1_l2_kernel_kde, 1, N, test_m, omega)
-dm_mse_e_20, _, _ = calc_kde_values(duchi_l1_l2_kernel_kde, 20, N, test_m, omega)
-dm_mse_e_50, dm_ctime, dm_qtime = calc_kde_values(duchi_l1_l2_kernel_kde, 50, N, test_m, omega)
+dm_mse_e_5, _, _ = calc_kde_values(duchi_l1_l2_kernel_kde, 5, N, test_m, omega)
+dm_mse_e_20, dm_ctime, dm_qtime = calc_kde_values(duchi_l1_l2_kernel_kde, 20, N, test_m, omega)
 # PM-KDE
 pm_mse_e_1, _, _ = calc_kde_values(piecewise_l1_l2_kernel_kde, 1, N, test_m, omega)
-pm_mse_e_20, _, _ = calc_kde_values(piecewise_l1_l2_kernel_kde, 20, N, test_m, omega)
-pm_mse_e_50, pm_ctime, pm_qtime = calc_kde_values(piecewise_l1_l2_kernel_kde, 50, N, test_m, omega)
+pm_mse_e_5, _, _ = calc_kde_values(piecewise_l1_l2_kernel_kde, 5, N, test_m, omega)
+pm_mse_e_20, pm_ctime, pm_qtime = calc_kde_values(piecewise_l1_l2_kernel_kde, 20, N, test_m, omega)
 # SW-KDE
 sw_mse_e_1, _, _ = calc_kde_values(square_wave_l1_l2_kernel_kde, 1, N, test_m, omega)
-sw_mse_e_20, _, _ = calc_kde_values(square_wave_l1_l2_kernel_kde, 20, N, test_m, omega)
-sw_mse_e_50, sw_ctime, sw_qtime = calc_kde_values(square_wave_l1_l2_kernel_kde, 50, N, test_m, omega)
+sw_mse_e_5, _, _ = calc_kde_values(square_wave_l1_l2_kernel_kde, 5, N, test_m, omega)
+sw_mse_e_20, sw_ctime, sw_qtime = calc_kde_values(square_wave_l1_l2_kernel_kde, 20, N, test_m, omega)
 # GI-KDE
 gi_mse_e_1, _, _ = calc_kde_values(gi_l2kernel_kde, 1, N, test_m, omega)
-gi_mse_e_20, _, _ = calc_kde_values(gi_l2kernel_kde, 20, N, test_m, omega)
-gi_mse_e_50, gi_ctime, gi_qtime = calc_kde_values(gi_l2kernel_kde, 50, N, test_m, omega)
+gi_mse_e_5, _, _ = calc_kde_values(gi_l2kernel_kde, 5, N, test_m, omega)
+gi_mse_e_20, gi_ctime, gi_qtime = calc_kde_values(gi_l2kernel_kde, 20, N, test_m, omega)
 
+''' mLDP-KDE '''
 ''' mLDP-KDE '''
 mldp_kde_mse_e_1 = []
 mldp_kde_ctime_e_1 = []
 mldp_kde_qtime_e_1 = []
+mldp_kde_mse_e_5 = []
+mldp_kde_ctime_e_5 = []
+mldp_kde_qtime_e_5 = []
 mldp_kde_mse_e_20 = []
 mldp_kde_ctime_e_20 = []
 mldp_kde_qtime_e_20 = []
-mldp_kde_mse_e_50 = []
-mldp_kde_ctime_e_50 = []
-mldp_kde_qtime_e_50 = []
 for i, e in enumerate(test_epsilon):
     for j, m in enumerate(test_m):
         m = int(m)
@@ -134,12 +138,12 @@ for i, e in enumerate(test_epsilon):
         globals()[f'mldp_kde_ctime_e_{e}'].append(mldp_kde_ctime_sum / len(seed_l2lsh))
         globals()[f'mldp_kde_qtime_e_{e}'].append(mldp_kde_qtime_sum / len(seed_l2lsh))
 
-gi_mse = [gi_mse_e_1, gi_mse_e_20, gi_mse_e_50]
-pm_mse = [pm_mse_e_1, pm_mse_e_20, pm_mse_e_50]
-sw_mse = [sw_mse_e_1, sw_mse_e_20, sw_mse_e_50]
-dm_mse = [dm_mse_e_1, dm_mse_e_20, dm_mse_e_50]
-mldp_kde_mse = [mldp_kde_mse_e_1, mldp_kde_mse_e_20, mldp_kde_mse_e_50]
+gi_mse = [gi_mse_e_1, gi_mse_e_5, gi_mse_e_20]
+pm_mse = [pm_mse_e_1, pm_mse_e_5, pm_mse_e_20]
+sw_mse = [sw_mse_e_1, sw_mse_e_5, sw_mse_e_20]
+dm_mse = [dm_mse_e_1, dm_mse_e_5, dm_mse_e_20]
+mldp_kde_mse = [mldp_kde_mse_e_1, mldp_kde_mse_e_5, mldp_kde_mse_e_20]
 draw_m_MSE(test_m, race_mse, gi_mse, pm_mse, dm_mse, sw_mse, mldp_kde_mse)
-draw_m_construction_time(test_m, race_ctime, gi_ctime, pm_ctime, dm_ctime, sw_ctime, mldp_kde_ctime_e_1, mldp_kde_ctime_e_20, mldp_kde_ctime_e_50)
-draw_m_query_time(test_m, race_qtime, gi_qtime, pm_qtime, dm_qtime, sw_qtime, mldp_kde_qtime_e_1, mldp_kde_qtime_e_20, mldp_kde_qtime_e_50)
+draw_m_construction_time(test_m, race_ctime, gi_ctime, pm_ctime, dm_ctime, sw_ctime, mldp_kde_ctime_e_1, mldp_kde_ctime_e_5, mldp_kde_ctime_e_20)
+draw_m_query_time(test_m, race_qtime, gi_qtime, pm_qtime, dm_qtime, sw_qtime, mldp_kde_qtime_e_1, mldp_kde_qtime_e_5, mldp_kde_qtime_e_20)
 

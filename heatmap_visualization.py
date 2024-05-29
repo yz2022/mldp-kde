@@ -13,7 +13,7 @@ from plotting_tools import draw_heatmap
 ''' Select dataset '''
 datasets = ['CodRNA', 'CovType', 'RCV1', 'Yelp', 'SYN']
 selected_flag = 0  # 0: CodRNA, 1:CovType, 2:RCV1, 3: Yelp, 4: SYN
-nearest_flag = 1  # 1: '1'-nearest, 10: '10'-nearest, 100: '100'-nearest, 1000: '1000'-nearest, 10000: '10000'-nearest for choosing r
+nearest_flag = 100  # 1: '1'-nearest, 10: '10'-nearest, 100: '100'-nearest, 1000: '1000'-nearest, 10000: '10000'-nearest for choosing r
 
 ''' Initialize '''
 params = dataset_parameters[datasets[selected_flag]]
@@ -31,10 +31,7 @@ N = const_data.shape[0]
 query_data = pd.read_csv(query_file, sep=',', lineterminator='\n', header=None)
 query_data = query_data.values
 merged_data = np.concatenate((const_data, query_data), axis=0)
-epsilon = np.arange(0, 51, 5)
-epsilon[0] = 1
-if len(L_R_set) == 3:
-    epsilon = [1, 5, 20]
+epsilon = [1, 2.5, 5, 7.5, 10, 12.5, 15, 17.5, 20]
 
 ''' t-SNE embedding '''
 tsne = TSNE(n_components=2, random_state=42, verbose=True)
@@ -53,7 +50,7 @@ draw_heatmap(query_embedded, acc_kde_vals, race_kde_value, datasets, selected_fl
 ''' GI '''
 for index, e in enumerate(epsilon):
     gi_kde_value, _, _ = gi_l2kernel_kde(e, query_data, const_data, m, N, omega)
-    draw_heatmap(query_embedded, acc_kde_vals, gi_kde_value, datasets, selected_flag, e, r=1, method_flag='gi')
+    draw_heatmap(query_embedded, acc_kde_vals, gi_kde_value, datasets, selected_flag, e, r=1, method_flag='gi-kde')
 
 
 ''' mLDP-KDE '''

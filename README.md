@@ -47,3 +47,6 @@ Python scripts are provided to run all experiments.
 - Update `mLDP_KDE.py`: Added comments to enhance code clarity.
 - Update `parameters.py`: Added a set of parameters for new experiments.
 - Update `plotting_tools.py`: Added functions `draw_heatmap` and  `draw_small_range_epsilon_MSE`  for new experiments.
+
+### [May 2024]
+- Update the repository for Camera-ready.

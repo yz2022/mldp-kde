@@ -16,10 +16,10 @@ def draw_epsilon_MSE(epsilon, race_mse, pm_mse, dm_mse, sw_mse, gi_mse, mldp_kde
     })
 
     fig, ax = plt.subplots()
-    ax.xaxis.set_major_locator(plt.FixedLocator([1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]))
+    ax.xaxis.set_major_locator(plt.FixedLocator([1, 2.5, 5, 7.5, 10, 12.5, 15, 17.5, 20]))
     ax.set_yscale('log')
-    ax.set_xlim(-2, 53)
-
+    ax.set_xlim(0, 21)
+    ax.set_xticklabels(['1', '', '5', '', '10', '', '15', '', '20'])
     ylim_dict = {
         "CodRNA": (0.000005, 0.1),
         "CovType": (0.000001, 0.05),
@@ -54,7 +54,7 @@ def draw_epsilon_MSE(epsilon, race_mse, pm_mse, dm_mse, sw_mse, gi_mse, mldp_kde
     plt.show()
 
 
-def draw_small_range_epsilon_MSE(epsilon, race_mse, gi_mse, mldp_kde_mse, title):
+def draw_epsilon_MSE_l1(epsilon, race_mse, pm_mse, dm_mse, sw_mse, mldp_kde_mse):
     plt.rcParams.update({
         'text.usetex': True,
         'font.family': 'serif',
@@ -68,45 +68,6 @@ def draw_small_range_epsilon_MSE(epsilon, race_mse, gi_mse, mldp_kde_mse, title)
     ax.set_yscale('log')
     ax.set_xlim(0, 21)
     ax.set_xticklabels(['1', '', '5', '', '10', '', '15', '', '20'])
-    ylim_dict = {
-        "CodRNA": (0.000005, 0.1),
-        "CovType": (0.000001, 0.05),
-        "RCV1": (0.000001, 0.1),
-        "Yelp": (0.000005, 5),
-        "SYN": (0.00001, 1)
-    }
-    if title in ylim_dict:
-        ax.set_ylim(*ylim_dict[title])
-        ax.yaxis.set_major_locator(plt.FixedLocator([10 ** i for i in range(-6, 2)]))
-    ax.yaxis.set_minor_locator(plt.FixedLocator([10 ** i * j for i in range(-6, 2) for j in range(2, 10)]))
-    plt.plot(epsilon, [race_mse] * len(epsilon), linestyle='-', linewidth=2, markerfacecolor='none', clip_on=False,
-             color='black', label="RACE")
-    plt.plot(epsilon, gi_mse, linestyle='-', marker='x', linewidth=1, markersize=15,
-             markerfacecolor='none', markeredgewidth=3, clip_on=False, color='blue', label="GI-KDE")
-    plt.plot(epsilon, mldp_kde_mse, linestyle='-', marker='o', linewidth=1, markersize=15, markerfacecolor='none',
-             markeredgewidth=3, clip_on=False, color='red', label="mLDP-KDE")
-    plt.tick_params(axis='x', labelsize=25)
-    plt.tick_params(axis='y', labelsize=25)
-    plt.xlabel(r'$\varepsilon$', fontname='Times New Roman', fontsize=35)
-    plt.ylabel('MSE')
-    plt.grid(True, linestyle='-', alpha=0.5, color='lightgray')
-    plt.title(title, fontsize=30)
-    plt.show()
-
-
-def draw_epsilon_MSE_l1(epsilon, race_mse, pm_mse, dm_mse, sw_mse, mldp_kde_mse):
-    plt.rcParams.update({
-        'text.usetex': True,
-        'font.family': 'serif',
-        'font.serif': 'Times New Roman',
-        'font.size': 30,
-        'text.latex.preamble': r'\usepackage{txfonts}',
-        'pgf.rcfonts': False
-    })
-    fig, ax = plt.subplots()
-    ax.xaxis.set_major_locator(plt.FixedLocator([1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]))
-    ax.set_yscale('log')
-    ax.set_xlim(-2, 53)
     ax.set_ylim(0.000005, 0.1)
     ax.yaxis.set_major_locator(plt.FixedLocator([1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1]))
     ax.yaxis.set_minor_locator(plt.FixedLocator([10 ** i * j for i in range(-6, 0) for j in range(2, 10)]))
@@ -138,9 +99,10 @@ def draw_epsilon_MSE_ang(epsilon, race_mse, pm_mse, dm_mse, sw_mse, gi_mse, fkm_
         'pgf.rcfonts': False
     })
     fig, ax = plt.subplots()
-    ax.xaxis.set_major_locator(plt.FixedLocator([1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]))
+    ax.xaxis.set_major_locator(plt.FixedLocator([1, 2.5, 5, 7.5, 10, 12.5, 15, 17.5, 20]))
     ax.set_yscale('log')
-    ax.set_xlim(-2, 53)
+    ax.set_xlim(0, 21)
+    ax.set_xticklabels(['1', '', '5', '', '10', '', '15', '', '20'])
     ax.set_ylim(1e-6, 1e-2)
     ax.yaxis.set_major_locator(plt.FixedLocator([1e-6, 1e-5, 1e-4, 1e-3, 1e-2]))
     ax.yaxis.set_minor_locator(plt.FixedLocator([10 ** i * j for i in range(-6, -1) for j in range(2, 10)]))
@@ -179,16 +141,17 @@ def draw_epsilon_construction_time(epsilon, mldp_kde_ctime, race_ctime, gi_ctime
     })
 
     fig, ax = plt.subplots(figsize=(6.6, 4.8))
-    ax.xaxis.set_major_locator(plt.FixedLocator([1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]))
+    ax.xaxis.set_major_locator(plt.FixedLocator([1, 2.5, 5, 7.5, 10, 12.5, 15, 17.5, 20]))
     ax.set_yscale('log')
-    ax.set_xlim(-2, 53)
+    ax.set_xlim(0, 21)
+    ax.set_xticklabels(['1', '', '5', '', '10', '', '15', '', '20'])
 
     ylim_dict = {
-        "CodRNA": (1, 5000),
+        "CodRNA": (1, 500),
         "CovType": (5, 1000),
-        "RCV1": (10, 10000),
+        "RCV1": (10, 5000),
         "Yelp": (10, 10000),
-        "SYN": (1, 100)
+        "SYN": (1, 1000)
     }
     if title in ylim_dict:
         ax.set_ylim(*ylim_dict[title])
@@ -228,9 +191,10 @@ def draw_epsilon_query_time(epsilon, mldp_kde_qtime, race_qtime, gi_qtime, pm_qt
     })
 
     fig, ax = plt.subplots()
-    ax.xaxis.set_major_locator(plt.FixedLocator([1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]))
+    ax.xaxis.set_major_locator(plt.FixedLocator([1, 2.5, 5, 7.5, 10, 12.5, 15, 17.5, 20]))
     ax.set_yscale('log')
-    ax.set_xlim(-2, 53)
+    ax.set_xlim(0, 21)
+    ax.set_xticklabels(['1', '', '5', '', '10', '', '15', '', '20'])
     ax.set_ylim(1e-6, 1e2)
     ax.yaxis.set_major_locator(plt.FixedLocator([1e-6, 1e-4, 1e-2, 1e0, 1e2]))
     ax.yaxis.set_minor_locator(plt.FixedLocator([10 ** i * j for i in range(-6, 3) for j in range(2, 10)]))
@@ -271,21 +235,21 @@ def draw_epsilon_sketch_communication_twins(epsilon, mldp_kde_sketch_size, mldp_
     ax1.set_xlabel(r'$\varepsilon$', fontname='Times New Roman', fontsize=40)
     ax1.set_ylabel(r'Sketch Size (B)', color='red')
     ax1.set_yscale('log')
-    ax1.set_xlim(-5, 56)
+    ax1.set_xlim(-2, 23)
     ax1_ylim_dict = {
         "CodRNA": (1e2, 1e4),
-        "CovType": (1e2, 1e5),
-        "RCV1": (1e3, 1e4),
-        "Yelp": (1e4, 1e6),
-        "SYN": (1e2, 1e5)
+        "CovType": (1e2, 1e4),
+        "RCV1": (1e2, 1e4),
+        "Yelp": (1e3, 1e7),
+        "SYN": (1e3, 1e7)
     }
     if title in ax1_ylim_dict:
         ax1.set_ylim(*ax1_ylim_dict[title])
-        ax1.yaxis.set_major_locator(plt.FixedLocator([10 ** i for i in range(2, 7)]))
-        ax1.yaxis.set_minor_locator(plt.FixedLocator([10 ** i * j for i in range(2, 7) for j in range(2, 10)]))
-    ax1.xaxis.set_major_locator(plt.FixedLocator([1, 10, 20, 30, 40, 50]))
+        ax1.yaxis.set_major_locator(plt.FixedLocator([10 ** i for i in range(2, 8)]))
+        ax1.yaxis.set_minor_locator(plt.FixedLocator([10 ** i * j for i in range(2, 8) for j in range(2, 10)]))
+    ax1.xaxis.set_major_locator(plt.FixedLocator([1, 5, 10, 15, 20]))
 
-    ax1.bar(epsilon - 1.75, mldp_kde_sketch_size, color='red', width=3.5, label="mLDP-KDE")
+    ax1.bar(epsilon - 0.8, mldp_kde_sketch_size, color='red', width=1.6, label="mLDP-KDE")
     ax1.tick_params(axis='x', labelsize=30)
     ax1.tick_params(axis='y', labelcolor='red', labelsize=30)
 
@@ -294,18 +258,19 @@ def draw_epsilon_sketch_communication_twins(epsilon, mldp_kde_sketch_size, mldp_
     ax2.set_ylabel('Communication (MB)', color='blue')
     ax2.set_yscale('log')
     ax2_ylim_dict = {
-        "CodRNA": (1e2, 1e4),
-        "CovType": (1e3, 1e5),
-        "RCV1": (1e3, 1e5),
-        "Yelp": (1e4, 1e7),
+        "CodRNA": (1e2, 1e3),
+        "CovType": (1e3, 1e4),
+        "RCV1": (1e3, 1e4),
+        "Yelp": (1e4, 1e6),
         "SYN": (1e2, 1e5)
     }
     if title in ax2_ylim_dict:
         ax2.set_ylim(*ax2_ylim_dict[title])
+        ax2.yaxis.set_minor_formatter(ticker.NullFormatter())
         ax2.yaxis.set_major_locator(plt.FixedLocator([10 ** i for i in range(2, 8)]))
         ax2.yaxis.set_minor_locator(plt.FixedLocator([10 ** i * j for i in range(2, 8) for j in range(2, 10)]))
 
-    ax2.bar(epsilon + 1.75, mldp_kde_communication, color='blue', width=3.5, label="mLDP-KDE")
+    ax2.bar(epsilon + 0.8, mldp_kde_communication, color='blue', width=1.6, label="mLDP-KDE")
     ax2.tick_params(axis='y', labelcolor='blue', labelsize=30)
     plt.title(title, fontsize=35)
     plt.show()
@@ -324,20 +289,27 @@ def draw_sketchsize_MSE(x_values_e_1, x_values_e_20, x_values_e_50, x_values_rac
     fig, ax = plt.subplots()
     ax.set_yscale('log')
     ax.set_xscale('log')
-    ax.xaxis.set_major_locator(plt.FixedLocator([10, 100, 1000, 10000, 100000]))
-    ax.xaxis.set_minor_locator(plt.FixedLocator([20, 50, 200, 500, 2000, 5000, 20000, 50000]))
 
     ylim_dict = {
-        "CodRNA": (1e-5, 1e-1),
-        "CovType": (5e-6, 1e-1),
-        "RCV1": (5e-6, 1e-1),
-        "Yelp": (5e-6, 5e-2),
-        "SYN": (1e-5, 1e-1)
+        "CodRNA": (1e-5, 1e0+0.6),
+        "CovType": (5e-6, 1e0),
+        "RCV1": (5e-6, 1e0),
+        "Yelp": (5e-6, 1e-1+0.05),
+        "SYN": (1e-5, 1e0)
     }
+
+    if title == "CodRNA" or title == "CovType" or title == "RCV1":
+        ax.set_xlim(1e1 - 2, 1e4 + 2500)
+        ax.xaxis.set_major_locator(plt.FixedLocator([10, 100, 1000, 10000, 100000]))
+        ax.xaxis.set_minor_locator(plt.FixedLocator([20, 50, 200, 500, 2000, 5000, 20000, 50000]))
+    elif title == "Yelp" or title == "SYN":
+        ax.set_xlim(1e1 - 2, 1e6 + 3e5)
+        ax.xaxis.set_major_locator(plt.FixedLocator([10, 100, 1000, 10000, 100000, 1000000]))
+        ax.xaxis.set_minor_locator(plt.FixedLocator([20, 50, 200, 500, 2000, 5000, 20000, 50000, 200000, 500000]))
     if title in ylim_dict:
         ax.set_ylim(*ylim_dict[title])
-        ax.yaxis.set_major_locator(plt.FixedLocator([10 ** i for i in range(-6, 0)]))
-        ax.yaxis.set_minor_locator(plt.FixedLocator([10 ** i * j for i in range(-6, 0) for j in range(2, 10)]))
+        ax.yaxis.set_major_locator(plt.FixedLocator([10 ** i for i in range(-6, 1)]))
+        ax.yaxis.set_minor_locator(plt.FixedLocator([10 ** i * j for i in range(-6, 1) for j in range(2, 10)]))
     ax.yaxis.set_minor_formatter(ticker.FuncFormatter(lambda x, pos: ''))
 
     plt.plot(x_values_race, y_values_race, linestyle='-', linewidth=2, markerfacecolor='none', clip_on=False, color='black', label="RACE")
@@ -362,7 +334,7 @@ def draw_n_MSE(test_num, race_mse, gi_mse, pm_mse, dm_mse, sw_mse, mldp_kde_mse)
         'text.latex.preamble': r'\usepackage{txfonts}',
         'pgf.rcfonts': False
     })
-    test_epsilon = [1, 20, 50]
+    test_epsilon = [1, 5, 20]
     for index, e in enumerate(test_epsilon):
         fig, ax = plt.subplots()
         ax.set_yscale('log')
@@ -494,7 +466,7 @@ def draw_m_MSE(test_m, race_mse, gi_mse, pm_mse, dm_mse, sw_mse, mldp_kde_mse):
         'text.latex.preamble': r'\usepackage{txfonts}',
         'pgf.rcfonts': False
     })
-    test_epsilon = [1, 20, 50]
+    test_epsilon = [1, 5, 20]
     for index, e in enumerate(test_epsilon):
         fig, ax = plt.subplots()
         ax.set_yscale('log')
@@ -539,7 +511,7 @@ def draw_m_construction_time(test_m, race_ctime, gi_ctime, pm_ctime, dm_ctime, s
     ax.set_ylim(5e-1, 100)
     ax.xaxis.set_major_locator(plt.FixedLocator([5, 10, 15, 20, 25, 30, 35, 40, 45, 50]))
     ax.yaxis.set_minor_locator(plt.FixedLocator([10 ** i * j for i in range(-1, 3) for j in range(2, 10)]))
-    ax.yaxis.set_major_locator(plt.FixedLocator([1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1e0, 1e1, 1e2]))
+    ax.yaxis.set_major_locator(plt.FixedLocator([1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3]))
     plt.plot(test_m, race_ctime, linestyle='-', linewidth=2, markerfacecolor='none', clip_on=False, color='black', label="RACE")
     plt.plot(test_m, dm_ctime, linestyle='-', marker='^', linewidth=1, markersize=15, markerfacecolor='none', markeredgewidth=3,
              clip_on=False, color='purple', label="DM-KDE")
@@ -633,12 +605,12 @@ def draw_heatmap(query_data_embedded, acc_kde_vals, plot_value, datasets, select
         plt.title(f'{datasets[selected_flag]}')
         plt.suptitle('Exact', y=-0.1, x=0.46)
     elif method_flag == 'mldp-kde':
-        plt.title(f'{datasets[selected_flag]}($\\varepsilon$ = {e}')
+        plt.title(f'{datasets[selected_flag]}($\\varepsilon$ = {e})')
         plt.suptitle('mLDP-KDE', y=-0.1, x=0.46)
     elif method_flag == 'race':
         plt.title(f'{datasets[selected_flag]}')
         plt.suptitle('RACE', y=-0.1, x=0.46)
-    elif method_flag == 'gi':
+    elif method_flag == 'gi-kde':
         plt.title(f'{datasets[selected_flag]}($\\varepsilon$ = {e})')
         plt.suptitle('GI-KDE', y=-0.1, x=0.46)
     plt.show()

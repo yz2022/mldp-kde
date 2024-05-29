@@ -16,7 +16,7 @@ m = params['m']
 omega = 2.5
 seed_l1lsh = params['seed_l2lsh']
 seed_grr_rehash = params['seed_grr_rehash']
-L_R_set = [[10, 9], [12, 9], [16, 9], [20, 9], [24, 9], [30, 9], [34, 9], [38, 9], [44, 9], [52, 9], [54, 9]]
+L_R_set = [[8, 5], [10, 7], [12, 7], [16, 7], [18, 7], [20, 7], [20, 8], [30, 7], [30, 7]]
 const_file = "small_datasets/CovType_const.csv"
 query_file = "small_datasets/CovType_query.csv"
 const_data = pd.read_csv(const_file, sep=',', lineterminator='\n', header=None)
@@ -24,8 +24,7 @@ const_data = const_data.values
 query_data = pd.read_csv(query_file, sep=',', lineterminator='\n', header=None)
 query_data = query_data.values
 N = const_data.shape[0]
-epsilon = np.arange(0, 51, 5)
-epsilon[0] = 1
+epsilon = [1, 2.5, 5, 7.5, 10, 12.5, 15, 17.5, 20]
 
 ''' accurate kde values'''
 acc_kde_vals = l1kernel_kde(query_data, const_data, N, omega)

@@ -52,7 +52,7 @@ def gi_l2kernel_kde(epsilon, query, data, m, n, bandwidth):
 
 
 ''' Function for GI-KDE (angular kernel)'''
-def gi_angkernel_kde(epsilon, query, data, n):
+def gi_angkernel_kde(epsilon, query, data, m, n):
     noisy_data = []
     for d in data:
         geo_ind = GeoInd(epsilon, d, d.shape[0])

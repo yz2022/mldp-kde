@@ -5,15 +5,14 @@ from parameters import dataset_parameters
 
 ''' Select dataset '''
 datasets = ['CodRNA', 'CovType', 'RCV1', 'Yelp', 'SYN']
-selected_flag = 4    # 0: CodRNA, 1:CovType, 2:RCV1, 3: Yelp, 4: SYN
+selected_flag = 0    # 0: CodRNA, 1:CovType, 2:RCV1, 3: Yelp, 4: SYN
 
 ''' Initialize '''
 params = dataset_parameters[datasets[selected_flag]]
 n = params['n']
 m = params['m']
 L_R_set = params['L_R_set_by_interval']
-epsilon = np.arange(0, 51, 10)
-epsilon[0] = 1
+epsilon = np.array([1, 5, 10, 15, 20])
 n_const = n - 100
 
 ''' Get sketch size and communication cost'''

@@ -1,3 +1,4 @@
+import math
 import pandas as pd
 import numpy as np
 from plotting_tools import draw_epsilon_MSE, draw_epsilon_construction_time, draw_epsilon_query_time
@@ -15,15 +16,17 @@ from parameters import dataset_parameters
 ''' Select dataset '''
 datasets = ['CodRNA', 'CovType', 'RCV1', 'Yelp', 'SYN']
 selected_flag = 0    # 0: CodRNA, 1:CovType, 2:RCV1, 3: Yelp, 4: SYN
+nearest_flag = 100
 
 ''' Initialize '''
 params = dataset_parameters[datasets[selected_flag]]
-r = params['r']
+r_set = params['r_set']
 m = params['m']
+n = params['n'] - 100
 omega = params['omega']
 seed_l2lsh = params['seed_l2lsh']
 seed_grr_rehash = params['seed_grr_rehash']
-L_R_set = params['L_R_set']
+L_R_set = params[f'L_R_set_{nearest_flag}nearest']
 const_file = f"small_datasets/{datasets[selected_flag]}_const.csv"
 query_file = f"small_datasets/{datasets[selected_flag]}_query.csv"
 const_data = pd.read_csv(const_file, sep=',', lineterminator='\n', header=None)
@@ -31,27 +34,26 @@ const_data = const_data.values
 query_data = pd.read_csv(query_file, sep=',', lineterminator='\n', header=None)
 query_data = query_data.values
 N = const_data.shape[0]
-epsilon = np.arange(0, 51, 5)
-epsilon[0] = 1
+epsilon = [1, 2.5, 5, 7.5, 10, 12.5, 15, 17.5, 20]
+
 
 ''' accurate kde values'''
 acc_kde_vals = l2kernel_kde(query_data, const_data, N, omega)
 
 ''' RACE '''
-race_mse_sum = 0
-race_ctime_sum = 0
-race_qtime_sum = 0
-race_mse = []
-race_ctime = []
-race_qtime = []
-for temp_seed_l2lsh in seed_l2lsh:
-    race_kde_value, ctime, qtime = count_race_l2(query_data, const_data, m, omega, N, temp_seed_l2lsh, 1000, 100)
-    race_mse_sum += MSE(acc_kde_vals, race_kde_value)
-    race_ctime_sum += ctime
-    race_qtime_sum += qtime
-race_mse.append(race_mse_sum / len(seed_l2lsh))
-race_ctime.append(race_ctime_sum / len(seed_l2lsh))
-race_qtime.append(race_qtime_sum / len(seed_l2lsh))
+race_kde_value_set = []
+race_ctime_set = []
+race_qtime_set = []
+for temp_seed in seed_l2lsh:
+    race_kde_value, ctime, qtime = count_race_l2(query_data, const_data, m, omega, N, temp_seed, 1000, 100)
+    race_kde_value_set.append(race_kde_value)
+    race_ctime_set.append(ctime)
+    race_qtime_set.append(qtime)
+mse_set = [MSE(acc_kde_vals, race_kde_value_set[i]) for i in range(len(seed_l2lsh))]
+race_mse = np.average(mse_set)
+race_ctime = np.average(race_ctime_set)
+race_qtime = np.average(race_qtime_set)
+
 
 ''' DM-KDE, PM-KDE, SW-KDE, GI-KDE '''
 def calc_kde_values(epsilon, kde_function, *args):
@@ -85,14 +87,15 @@ for index, e in enumerate(epsilon):
     mldp_kde_ctime_sum = 0
     mldp_kde_qtime_sum = 0
     for temp_seed_l2lsh, temp_seed_grr_rehash in zip(seed_l2lsh, seed_grr_rehash):
-        l2lsh_race_kde, ctime, qtime, _ = mldp_kde_l2kernel_kde(query_data, e, const_data, L, R, m, omega, N, r, temp_seed_l2lsh,
-                                                                temp_seed_grr_rehash)
+        l2lsh_race_kde, ctime, qtime, _ = mldp_kde_l2kernel_kde(query_data, e, const_data, L, R, m, omega, N, r_set[int(math.log10(nearest_flag))],
+                                                                temp_seed_l2lsh, temp_seed_grr_rehash)
         mldp_kde_mse_sum += MSE(acc_kde_vals, l2lsh_race_kde)
         mldp_kde_ctime_sum += ctime
         mldp_kde_qtime_sum += qtime
     mldp_kde_mse.append(mldp_kde_mse_sum / len(seed_l2lsh))
     mldp_kde_ctime.append(mldp_kde_ctime_sum / len(seed_l2lsh))
     mldp_kde_qtime.append(mldp_kde_qtime_sum / len(seed_l2lsh))
+
 
 draw_epsilon_MSE(epsilon, race_mse, pm_mse, dm_mse, sw_mse, gi_mse, mldp_kde_mse, datasets[selected_flag])
 draw_epsilon_construction_time(epsilon, mldp_kde_ctime, race_ctime, gi_ctime, pm_ctime, dm_ctime, sw_ctime, datasets[selected_flag])

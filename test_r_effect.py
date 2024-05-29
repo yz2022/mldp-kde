@@ -25,8 +25,7 @@ const_data = const_data.values
 query_data = pd.read_csv(query_file, sep=',', lineterminator='\n', header=None)
 query_data = query_data.values
 N = const_data.shape[0]
-epsilon = np.arange(0, 51, 5)
-epsilon[0] = 1
+epsilon = [1, 2.5, 5, 7.5, 10, 12.5, 15, 17.5, 20]
 if len(L_R_set) == 3:
     epsilon = [1, 5, 20]
 
